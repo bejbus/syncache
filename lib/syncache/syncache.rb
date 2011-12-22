@@ -251,6 +251,14 @@ class Cache
 
     return unless @max_size.kind_of? Numeric
 
+    if @sync.locked?
+      check_size_internal
+    else
+      @sync.synchronize { check_size_internal }
+    end
+  end
+
+  def check_size_internal
     while @cache.size > @max_size do
       # optimize: supplement hash with queue
       oldest = @cache.keys.min {|a, b| @cache[a].replacement_index <=> @cache[b].replacement_index }
